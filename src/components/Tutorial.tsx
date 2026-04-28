@@ -34,7 +34,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
             </button>
 
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight">ふきリマの使い方</h2>
+              <h2 className="text-3xl font-bold tracking-tight">ふきメモの使い方</h2>
               <p className="text-[var(--text-muted)] text-sm tracking-widest uppercase font-mono">Simple is Best</p>
             </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu as MenuIcon, X, Sun, Moon, Trash2, HelpCircle } from 'lucide-react';
+import { Menu as MenuIcon, X, Sun, Moon, Trash2, HelpCircle, Share2, AlertTriangle } from 'lucide-react';
 import { Theme } from '../types';
 
 interface MenuProps {
@@ -8,9 +8,11 @@ interface MenuProps {
   onToggleTheme: () => void;
   onClearAll: () => void;
   onShowTutorial: () => void;
+  onShowShare: () => void;
+  onShowNotes: () => void;
 }
 
-export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, onShowTutorial }) => {
+export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, onShowTutorial, onShowShare, onShowNotes }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
@@ -18,6 +20,16 @@ export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, on
       label: '使い方',
       icon: <HelpCircle size={20} />,
       onClick: () => { onShowTutorial(); setIsOpen(false); }
+    },
+    {
+      label: '注意点',
+      icon: <AlertTriangle size={20} />,
+      onClick: () => { onShowNotes(); setIsOpen(false); }
+    },
+    {
+      label: '紹介する',
+      icon: <Share2 size={20} />,
+      onClick: () => { onShowShare(); setIsOpen(false); }
     },
     {
       label: theme === Theme.LIGHT ? 'ダークモード' : 'ライトモード',
@@ -86,7 +98,7 @@ export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, on
 
               <div className="pt-8 border-t border-[var(--text-muted)] opacity-50">
                 <p className="text-[10px] uppercase tracking-widest text-center">
-                  ふきリマ v1.0
+                  ふきメモ v1.1
                 </p>
               </div>
             </motion.div>

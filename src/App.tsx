@@ -5,19 +5,24 @@ import { Bubble } from './components/Bubble';
 import { AddForm } from './components/AddForm';
 import { Menu } from './components/Menu';
 import { Tutorial } from './components/Tutorial';
+import { ShareModal } from './components/ShareModal';
+import { NotesModal } from './components/NotesModal';
 
-const STORAGE_KEY = 'fukirima_data';
+const STORAGE_KEY = 'fukimemo_data';
+const APP_PUBLIC_URL = 'https://fukimemo.vercel.app/';
 
 export default function App() {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Load data
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('fukirima_data');
     if (saved) {
       try {
         const { reminders: savedReminders, theme: savedTheme } = JSON.parse(saved);
@@ -96,6 +101,16 @@ export default function App() {
       className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center p-8 select-none"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
+      {/* App Logo/Title */}
+      <div className="fixed top-8 left-8 z-50 flex flex-col pointer-events-none">
+        <h1 className="text-xl font-black tracking-tighter uppercase leading-none">
+          ふきメモ
+        </h1>
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--text-muted)] mt-1">
+          吹き出しメモ
+        </span>
+      </div>
+
       <div 
         ref={containerRef}
         className="flex flex-wrap items-center justify-center gap-8 w-full max-w-full"
@@ -126,11 +141,24 @@ export default function App() {
         onToggleTheme={toggleTheme} 
         onClearAll={clearAll} 
         onShowTutorial={() => setShowTutorial(true)}
+        onShowShare={() => setShowShare(true)}
+        onShowNotes={() => setShowNotes(true)}
       />
 
       <Tutorial 
         isOpen={showTutorial} 
         onClose={() => setShowTutorial(false)} 
+      />
+
+      <ShareModal
+        isOpen={showShare}
+        onClose={() => setShowShare(false)}
+        url={APP_PUBLIC_URL}
+      />
+
+      <NotesModal
+        isOpen={showNotes}
+        onClose={() => setShowNotes(false)}
       />
     </div>
   );

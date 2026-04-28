@@ -1,6 +1,6 @@
 {
-  "name": "ふきリマ (Fukirima)",
-  "description": "直感的に使える、視覚的リマインダー。重要度に合わせてサイズが変わる吹き出しでタスクを管理。",
+  "name": "ふきメモ (Fukimemo)",
+  "description": "直感的に使える、視覚的メモ。重要度に合わせてサイズが変わる吹き出しでメモを管理。",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

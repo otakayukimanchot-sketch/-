@@ -33,7 +33,7 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, scale }) => 
       onDoubleClick={handleDoubleClick}
       className="relative flex items-center justify-center cursor-pointer select-none group"
       style={{
-        width: size,
+        width: size * 1.3,
         height: size,
       }}
       title="ダブルタップで削除"
