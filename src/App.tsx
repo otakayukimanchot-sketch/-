@@ -77,7 +77,7 @@ export default function App() {
       let newReminders = [...reminders];
       const iterations = 15; // Increased iterations for stability
       const repulsionStrength = 0.04;
-      const centerPull = 0.005; // Very weak pull to keep things from escaping too far
+      const centerPull = 0.002; // Very weak pull to keep things from escaping too far
 
       for (let i = 0; i < iterations; i++) {
         for (let a = 0; a < newReminders.length; a++) {
@@ -115,7 +115,7 @@ export default function App() {
 
           // Strict Edge constraints with padding
           const padX = 0.12;
-          const padYTop = 0.22;
+          const padYTop = 0.18;
           const padYBottom = 0.15;
           newReminders[a].x = Math.max(padX, Math.min(1 - padX, newReminders[a].x));
           newReminders[a].y = Math.max(padYTop, Math.min(1 - padYBottom, newReminders[a].y));
@@ -142,8 +142,8 @@ export default function App() {
 
   const addReminder = (text: string, importance: number) => {
     // Safe margins: 15% from left/right, 20% from top (avoid title), 15% from bottom
-    const x = 0.15 + Math.random() * 0.7;
-    const y = 0.2 + Math.random() * 0.6;
+    const x = 0.1 + Math.random() * 0.8;
+    const y = 0.1 + Math.random() * 0.8;
 
     const newReminder: Reminder = {
       id: crypto.randomUUID(),
@@ -173,12 +173,12 @@ export default function App() {
       className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center select-none"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
-      {/* App Logo/Title with Glassmorpshim */}
-      <div className="fixed top-0 left-0 pt-8 pl-8 pr-12 pb-8 z-50 rounded-br-[60px] bg-[var(--bg-primary)]/80 backdrop-blur-2xl border-b border-r border-[var(--text-active)]/10 shadow-sm pointer-events-none">
+      {/* App Logo/Title with Integrated Frosted Glass */}
+      <div className="fixed top-0 left-0 pt-6 pl-6 pr-12 pb-10 z-50 rounded-br-[64px] backdrop-blur-[40px] pointer-events-none">
         <h1 className="text-2xl font-black tracking-tighter uppercase leading-none text-[var(--text-active)]">
           ふきメモ
         </h1>
-        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--text-muted)] mt-1.5 block">
+        <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] mt-1.5 block">
           吹き出しメモ
         </span>
       </div>
