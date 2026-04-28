@@ -47,9 +47,9 @@ export default function App() {
     document.body.className = `theme-${theme}`;
   }, [reminders, theme]);
 
-  // Scaling logic: All bubbles must fit in screen
+  // Scaling logic & Collision Resolution (Force-directed layout inspired)
   useEffect(() => {
-    const updateScale = () => {
+    const solveCollisions = () => {
       if (!containerRef.current || reminders.length === 0) {
         setScale(1);
         return;
@@ -58,32 +58,100 @@ export default function App() {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // Estimated area taken by each bubble: (120 + imp * 1.6)^2
-      const totalArea = reminders.reduce((acc, r) => {
-        const d = 120 + (r.importance * 1.6);
-        return acc + (d * d);
+      // 1. Calculate ideal scale based on density
+      const totalRawArea = reminders.reduce((acc, r) => {
+        const h = (120 + r.importance * 1.6);
+        const w = h * 1.3;
+        return acc + (w * h);
       }, 0);
 
-      // We want the total area to be roughly 60% of viewport to leave space
-      const availableArea = (viewportWidth * viewportHeight) * 0.6;
-      const calculatedScale = Math.sqrt(availableArea / totalArea);
+      const targetDensity = 0.38; 
+      const screenArea = viewportWidth * viewportHeight;
+      const areaBasedScale = Math.sqrt((screenArea * targetDensity) / totalRawArea);
+      const countFactor = reminders.length > 5 ? Math.pow(0.95, reminders.length - 5) : 1;
+      const finalScale = Math.max(0.12, Math.min(0.85, areaBasedScale * countFactor));
       
-      // Also factor in "too many items" scaling for visibility if square-root isn't enough
-      // Limit scale within [0.2, 1.0]
-      setScale(Math.max(0.2, Math.min(1.0, calculatedScale)));
+      setScale(finalScale);
+
+      // 2. Force-directed spread
+      let newReminders = [...reminders];
+      const iterations = 15; // Increased iterations for stability
+      const repulsionStrength = 0.04;
+      const centerPull = 0.005; // Very weak pull to keep things from escaping too far
+
+      for (let i = 0; i < iterations; i++) {
+        for (let a = 0; a < newReminders.length; a++) {
+          const ra = newReminders[a];
+          
+          // Repulsion from other bubbles
+          for (let b = a + 1; b < newReminders.length; b++) {
+            const rb = newReminders[b];
+            
+            const dx = (ra.x - rb.x);
+            const dy = (ra.y - rb.y) * (viewportHeight / viewportWidth);
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.sqrt(distSq) || 0.01;
+            
+            // Interaction distance: bubbles want to be at least this far apart
+            const ha = (120 + ra.importance * 1.6) * finalScale;
+            const hb = (120 + rb.importance * 1.6) * finalScale;
+            const idealDist = (Math.max(ha, hb) * 1.5) / viewportWidth;
+
+            if (dist < idealDist) {
+              const push = (idealDist - dist) * repulsionStrength;
+              const moveX = (dx / dist) * push;
+              const moveY = (dy / dist) * push * (viewportWidth / viewportHeight);
+
+              newReminders[a] = { ...newReminders[a], x: newReminders[a].x + moveX, y: newReminders[a].y + moveY };
+              newReminders[b] = { ...newReminders[b], x: newReminders[b].x - moveX, y: newReminders[b].y - moveY };
+            }
+          }
+          
+          // Weak pull to visual center area (slightly biased lower to avoid title)
+          const centerX = 0.5;
+          const centerY = 0.55;
+          newReminders[a].x += (centerX - newReminders[a].x) * centerPull;
+          newReminders[a].y += (centerY - newReminders[a].y) * centerPull;
+
+          // Strict Edge constraints with padding
+          const padX = 0.12;
+          const padYTop = 0.22;
+          const padYBottom = 0.15;
+          newReminders[a].x = Math.max(padX, Math.min(1 - padX, newReminders[a].x));
+          newReminders[a].y = Math.max(padYTop, Math.min(1 - padYBottom, newReminders[a].y));
+        }
+      }
+
+      // Update state if changed
+      const changed = newReminders.some((r, j) => 
+        Math.abs(r.x - reminders[j].x) > 0.0005 || Math.abs(r.y - reminders[j].y) > 0.0005
+      );
+
+      if (changed) {
+        setReminders(newReminders);
+      }
     };
 
-    updateScale();
-    window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    const timeoutId = setTimeout(solveCollisions, 50);
+    window.addEventListener('resize', solveCollisions);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', solveCollisions);
+    };
   }, [reminders]);
 
   const addReminder = (text: string, importance: number) => {
+    // Safe margins: 15% from left/right, 20% from top (avoid title), 15% from bottom
+    const x = 0.15 + Math.random() * 0.7;
+    const y = 0.2 + Math.random() * 0.6;
+
     const newReminder: Reminder = {
       id: crypto.randomUUID(),
       text,
       importance,
       createdAt: new Date().toISOString(),
+      x,
+      y,
     };
     setReminders((prev) => [newReminder, ...prev]);
   };
@@ -102,22 +170,22 @@ export default function App() {
 
   return (
     <div 
-      className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center p-8 select-none"
+      className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center select-none"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
-      {/* App Logo/Title */}
-      <div className="fixed top-8 left-8 z-50 flex flex-col pointer-events-none">
-        <h1 className="text-xl font-black tracking-tighter uppercase leading-none">
+      {/* App Logo/Title with Glassmorpshim */}
+      <div className="fixed top-0 left-0 pt-8 pl-8 pr-12 pb-8 z-50 rounded-br-[60px] bg-[var(--bg-primary)]/80 backdrop-blur-2xl border-b border-r border-[var(--text-active)]/10 shadow-sm pointer-events-none">
+        <h1 className="text-2xl font-black tracking-tighter uppercase leading-none text-[var(--text-active)]">
           ふきメモ
         </h1>
-        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--text-muted)] mt-1">
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[var(--text-muted)] mt-1.5 block">
           吹き出しメモ
         </span>
       </div>
 
       <div 
         ref={containerRef}
-        className="flex flex-wrap items-center justify-center gap-8 w-full max-w-full"
+        className="relative w-full h-full"
       >
         <AnimatePresence mode="popLayout">
           {reminders.map((reminder) => (
@@ -131,7 +199,7 @@ export default function App() {
         </AnimatePresence>
 
         {reminders.length === 0 && (
-          <div className="text-[var(--text-muted)] text-center space-y-4 animate-pulse">
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-muted)] text-center space-y-4 animate-pulse pointer-events-none">
             <p className="text-xl font-light tracking-widest uppercase">No Bubbles</p>
             <p className="text-xs">右下の＋ボタンから追加してください</p>
           </div>

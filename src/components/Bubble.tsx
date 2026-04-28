@@ -19,19 +19,37 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, scale }) => 
     day: 'numeric',
   });
 
-  const handleDoubleClick = () => {
-    onDelete(reminder.id);
+  const lastClickTime = React.useRef<number>(0);
+
+  const handleClick = () => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300; // 300ms以内ならダブルタップ
+
+    if (now - lastClickTime.current < DOUBLE_TAP_DELAY) {
+      onDelete(reminder.id);
+    }
+    lastClickTime.current = now;
   };
 
   return (
     <motion.div
       layout
       initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0, opacity: 0 }}
-      whileTap={{ scale: 0.95 }}
-      onDoubleClick={handleDoubleClick}
-      className="relative flex items-center justify-center cursor-pointer select-none group"
+      animate={{ 
+        scale: 1, 
+        opacity: 1,
+        left: `${reminder.x * 100}%`,
+        top: `${reminder.y * 100}%`,
+      }}
+      exit={{ 
+        scale: 1.4, 
+        opacity: 0, 
+        filter: "blur(10px)",
+        transition: { duration: 0.3, ease: "easeOut" } 
+      }}
+      whileTap={{ scale: 0.9 }}
+      onClick={handleClick}
+      className="absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer select-none group"
       style={{
         width: size * 1.3,
         height: size,

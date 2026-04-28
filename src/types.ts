@@ -8,6 +8,8 @@ export interface Reminder {
   text: string;
   importance: number; // 0 to 100
   createdAt: string; // ISO string
+  x: number; // 0 to 1 (relative position)
+  y: number; // 0 to 1 (relative position)
 }
 
 export interface AppState {
