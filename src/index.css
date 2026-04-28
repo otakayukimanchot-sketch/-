@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply transition-colors duration-300;
+  }
+}
+
+.theme-light {
+  --bg-primary: #ffffff;
+  --text-active: #000000;
+  --text-muted: #71717a;
+  --bubble-bg: #ffffff;
+  --bubble-border: #000000;
+}
+
+.theme-dark {
+  --bg-primary: #000000;
+  --text-active: #ffffff;
+  --text-muted: #a1a1aa;
+  --bubble-bg: #000000;
+  --bubble-border: #ffffff;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-active);
+  overflow: hidden;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom range input styling */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--text-active);
+  border: 2px solid var(--bg-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--text-active);
+  border: 2px solid var(--bg-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
