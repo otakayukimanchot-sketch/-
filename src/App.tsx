@@ -23,6 +23,8 @@ export default function App() {
   // Load data
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('fukirima_data');
+    const hasSeenTutorial = localStorage.getItem('fukimemo_tutorial_seen');
+
     if (saved) {
       try {
         const { reminders: savedReminders, theme: savedTheme } = JSON.parse(saved);
@@ -31,9 +33,11 @@ export default function App() {
       } catch (e) {
         console.error('Failed to load storage', e);
       }
-    } else {
-      // First time user
+    }
+
+    if (!hasSeenTutorial) {
       setShowTutorial(true);
+      localStorage.setItem('fukimemo_tutorial_seen', 'true');
     }
   }, []);
 
