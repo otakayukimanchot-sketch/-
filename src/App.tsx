@@ -18,6 +18,7 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [scale, setScale] = useState(1);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Load data
@@ -117,15 +118,19 @@ export default function App() {
           const padX = 0.12;
           const padYTop = 0.18;
           const padYBottom = 0.15;
-          newReminders[a].x = Math.max(padX, Math.min(1 - padX, newReminders[a].x));
-          newReminders[a].y = Math.max(padYTop, Math.min(1 - padYBottom, newReminders[a].y));
+          
+          if (newReminders[a].id !== draggingId) {
+            newReminders[a].x = Math.max(padX, Math.min(1 - padX, newReminders[a].x));
+            newReminders[a].y = Math.max(padYTop, Math.min(1 - padYBottom, newReminders[a].y));
+          }
         }
       }
 
-      // Update state if changed
-      const changed = newReminders.some((r, j) => 
-        Math.abs(r.x - reminders[j].x) > 0.0005 || Math.abs(r.y - reminders[j].y) > 0.0005
-      );
+      // Update state if changed, ignoring the one being dragged for movement updates
+      const changed = newReminders.some((r, j) => {
+        if (r.id === draggingId) return false;
+        return Math.abs(r.x - reminders[j].x) > 0.0005 || Math.abs(r.y - reminders[j].y) > 0.0005;
+      });
 
       if (changed) {
         setReminders(newReminders);
@@ -158,6 +163,13 @@ export default function App() {
 
   const deleteReminder = (id: string) => {
     setReminders((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const updateReminderPosition = (id: string, x: number, y: number) => {
+    setReminders((prev) => 
+      prev.map((r) => (r.id === id ? { ...r, x, y } : r))
+    );
+    setDraggingId(null);
   };
 
   const clearAll = () => {
@@ -210,7 +222,11 @@ export default function App() {
               key={reminder.id}
               reminder={reminder}
               onDelete={deleteReminder}
+              onPositionChange={updateReminderPosition}
+              onDragStart={() => setDraggingId(reminder.id)}
+              isDragging={draggingId === reminder.id}
               scale={scale}
+              containerRef={containerRef}
             />
           ))}
         </AnimatePresence>

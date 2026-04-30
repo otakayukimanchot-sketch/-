@@ -5,10 +5,14 @@ import { Reminder } from '../types';
 interface BubbleProps {
   reminder: Reminder;
   onDelete: (id: string) => void;
+  onPositionChange: (id: string, x: number, y: number) => void;
+  onDragStart: () => void;
+  isDragging: boolean;
   scale: number;
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
-export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, scale }) => {
+export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, onPositionChange, onDragStart, isDragging: isDraggingState, scale, containerRef }) => {
   // Base size is 120px to 280px depending on importance
   const baseSize = 120 + (reminder.importance * 1.6);
   const size = baseSize * scale;
@@ -20,8 +24,10 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, scale }) => 
   });
 
   const lastClickTime = React.useRef<number>(0);
+  const isDragging = React.useRef(false);
 
   const handleClick = () => {
+    if (isDragging.current) return;
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300; // 300ms以内ならダブルタップ
 
@@ -31,16 +37,40 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, scale }) => 
     lastClickTime.current = now;
   };
 
+  const handleDragEnd = (_: any, info: any) => {
+    if (!containerRef.current) return;
+    
+    // Set dragging to false with a small delay to prevent accidental clicks
+    setTimeout(() => {
+      isDragging.current = false;
+    }, 50);
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const newX = (info.point.x - rect.left) / rect.width;
+    const newY = (info.point.y - rect.top) / rect.height;
+    
+    onPositionChange(reminder.id, newX, newY);
+  };
+
   return (
     <motion.div
+      drag
+      dragMomentum={false}
+      dragConstraints={containerRef}
+      onDragStart={() => { 
+        isDragging.current = true;
+        onDragStart();
+      }}
+      onDragEnd={handleDragEnd}
       layout
       initial={{ scale: 0, opacity: 0 }}
       animate={{ 
         scale: 1, 
         opacity: 1,
-        left: `${reminder.x * 100}%`,
-        top: `${reminder.y * 100}%`,
+        left: isDraggingState ? undefined : `${reminder.x * 100}%`,
+        top: isDraggingState ? undefined : `${reminder.y * 100}%`,
       }}
+      whileDrag={{ zIndex: 1000, scale: 1.05 }}
       exit={{ 
         scale: 1.4, 
         opacity: 0, 
