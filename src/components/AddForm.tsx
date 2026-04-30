@@ -56,6 +56,7 @@ export const AddForm: React.FC<AddFormProps> = ({ onAdd }) => {
                 type="button" 
                 onClick={() => setIsOpen(false)}
                 className="absolute top-4 right-4 text-[var(--text-active)] p-1"
+                tabIndex={-1}
               >
                 <X size={24} />
               </button>
@@ -72,6 +73,7 @@ export const AddForm: React.FC<AddFormProps> = ({ onAdd }) => {
                   onChange={(e) => setText(e.target.value.slice(0, 50))}
                   className="w-full bg-transparent border-b-2 border-[var(--text-active)] py-2 text-xl outline-none placeholder:opacity-30"
                   required
+                  enterKeyHint="done"
                 />
               </div>
 
@@ -89,6 +91,7 @@ export const AddForm: React.FC<AddFormProps> = ({ onAdd }) => {
                   value={importance}
                   onChange={(e) => setImportance(parseInt(e.target.value))}
                   className="w-full h-1 bg-[var(--text-muted)] rounded-lg appearance-none cursor-pointer accent-[var(--text-active)]"
+                  tabIndex={-1}
                 />
                 <div className="flex justify-between text-[10px] text-[var(--text-muted)] uppercase tracking-tighter">
                   <span>Low</span>
@@ -100,6 +103,7 @@ export const AddForm: React.FC<AddFormProps> = ({ onAdd }) => {
                 type="submit"
                 disabled={!text.trim()}
                 className="w-full py-4 bg-[var(--text-active)] text-[var(--bg-primary)] rounded-full font-bold text-lg hover:opacity-90 disabled:opacity-30 transition-all uppercase tracking-widest"
+                tabIndex={-1}
               >
                 Add Bubble
               </button>

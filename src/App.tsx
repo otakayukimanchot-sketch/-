@@ -168,6 +168,10 @@ export default function App() {
     setTheme((prev) => (prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT));
   };
 
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
+  const dayStr = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+
   return (
     <div 
       className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center select-none"
@@ -181,6 +185,19 @@ export default function App() {
         <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] mt-1.5 block">
           吹き出しメモ
         </span>
+      </div>
+
+      {/* Date & Weekday Display */}
+      <div className="fixed top-6 right-20 z-50 flex items-center gap-3 pr-4 pointer-events-none">
+        <div className="text-right">
+          <div className="text-sm font-black tracking-widest text-[var(--text-active)] lining-nums leading-none">
+            {dateStr}
+          </div>
+          <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mt-1">
+            {dayStr}曜日
+          </div>
+        </div>
+        <div className="w-[1px] h-6 bg-[var(--text-active)]/10" />
       </div>
 
       <div 
