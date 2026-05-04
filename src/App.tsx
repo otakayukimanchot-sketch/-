@@ -19,37 +19,34 @@ export default function App() {
   const [showNotes, setShowNotes] = useState(false);
   const [scale, setScale] = useState(1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [attractor, setAttractor] = useState<{ x: number, y: number } | null>(null);
+  const attractorRef = useRef<{ x: number, y: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Input tracking for attractor
   useEffect(() => {
+    const updateAttractor = (clientX: number, clientY: number) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      attractorRef.current = {
+        x: (clientX - rect.left) / rect.width,
+        y: (clientY - rect.top) / rect.height
+      };
+    };
+
     const handlePointerMove = (e: PointerEvent) => {
-      // For mobile, we only want to track if there's an active touch (pointerType === 'touch')
-      // but for mouse, we can track all the time.
       if (e.pointerType === 'mouse' || (e.pointerType === 'touch' && e.buttons > 0)) {
-        if (!containerRef.current) return;
-        const rect = containerRef.current.getBoundingClientRect();
-        setAttractor({
-          x: (e.clientX - rect.left) / rect.width,
-          y: (e.clientY - rect.top) / rect.height
-        });
+        updateAttractor(e.clientX, e.clientY);
       }
     };
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      setAttractor({
-        x: (e.clientX - rect.left) / rect.width,
-        y: (e.clientY - rect.top) / rect.height
-      });
+      updateAttractor(e.clientX, e.clientY);
     };
 
     const handlePointerUp = (e: PointerEvent) => {
+      setDraggingId(null);
       if (e.pointerType === 'touch') {
-        // Stop following on touch release
-        setAttractor(null);
+        attractorRef.current = null;
       }
     };
 
@@ -102,6 +99,7 @@ export default function App() {
         return;
       }
 
+      const attractor = attractorRef.current;
       const now = Date.now();
       const deltaTime = (now - lastTime) / 1000;
       lastTime = now;
@@ -126,7 +124,7 @@ export default function App() {
 
       // 2. Force-directed spread
       let newReminders = JSON.parse(JSON.stringify(reminders));
-      const iterations = 8; // Fewer iterations per frame but higher FPS with RAF
+      const iterations = 8;
       const repulsionStrength = 0.05;
       const centerPull = 0.002;
 
@@ -134,6 +132,13 @@ export default function App() {
         for (let a = 0; a < newReminders.length; a++) {
           const ra = newReminders[a];
           
+          // PINNING LOGIC: If this bubble is being dragged, lock it to the cursor
+          if (ra.id === draggingId && attractor) {
+            newReminders[a].x = attractor.x;
+            newReminders[a].y = attractor.y;
+            continue; // Skip physics for the pinned item
+          }
+
           // Repulsion from other bubbles
           for (let b = a + 1; b < newReminders.length; b++) {
             const rb = newReminders[b];
@@ -152,7 +157,6 @@ export default function App() {
               const moveX = (dx / dist) * push;
               const moveY = (dy / dist) * push * (viewportWidth / viewportHeight);
 
-              // Don't move the one being dragged by fingers, but let it push others
               if (ra.id !== draggingId) {
                 newReminders[a].x += moveX;
                 newReminders[a].y += moveY;
@@ -169,7 +173,6 @@ export default function App() {
             const targetX = attractor ? attractor.x : 0.5;
             const targetY = attractor ? attractor.y : 0.55;
             
-            // Stronger, tighter pull when attractor is active
             const pullStrength = attractor ? 0.04 : centerPull;
             
             newReminders[a].x += (targetX - newReminders[a].x) * pullStrength;
@@ -206,7 +209,7 @@ export default function App() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', solveCollisions);
     };
-  }, [reminders, attractor, draggingId]);
+  }, [reminders, draggingId]);
 
 
   const addReminder = (text: string, importance: number) => {
@@ -227,15 +230,6 @@ export default function App() {
 
   const deleteReminder = (id: string) => {
     setReminders((prev) => prev.filter((r) => r.id !== id));
-  };
-
-  const updateReminderPosition = (id: string, x: number, y: number, isFinal = true) => {
-    setReminders((prev) => 
-      prev.map((r) => (r.id === id ? { ...r, x, y } : r))
-    );
-    if (isFinal) {
-      setDraggingId(null);
-    }
   };
 
   const clearAll = () => {
@@ -288,11 +282,8 @@ export default function App() {
               key={reminder.id}
               reminder={reminder}
               onDelete={deleteReminder}
-              onPositionChange={updateReminderPosition}
               onDragStart={() => setDraggingId(reminder.id)}
-              isDragging={draggingId === reminder.id}
               scale={scale}
-              containerRef={containerRef}
             />
           ))}
         </AnimatePresence>
