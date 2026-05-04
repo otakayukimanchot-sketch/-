@@ -5,7 +5,7 @@ import { Reminder } from '../types';
 interface BubbleProps {
   reminder: Reminder;
   onDelete: (id: string) => void;
-  onPositionChange: (id: string, x: number, y: number) => void;
+  onPositionChange: (id: string, x: number, y: number, isFinal?: boolean) => void;
   onDragStart: () => void;
   isDragging: boolean;
   scale: number;
@@ -37,19 +37,21 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, onPositionCh
     lastClickTime.current = now;
   };
 
-  const handleDragEnd = (_: any, info: any) => {
+  const syncPosition = (_: any, info: any, isFinal = false) => {
     if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const newX = (info.point.x - rect.left) / rect.width;
+    const newY = (info.point.y - rect.top) / rect.height;
+    onPositionChange(reminder.id, newX, newY, isFinal);
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    syncPosition(event, info, true);
     
     // Set dragging to false with a small delay to prevent accidental clicks
     setTimeout(() => {
       isDragging.current = false;
     }, 50);
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const newX = (info.point.x - rect.left) / rect.width;
-    const newY = (info.point.y - rect.top) / rect.height;
-    
-    onPositionChange(reminder.id, newX, newY);
   };
 
   return (
@@ -61,6 +63,7 @@ export const Bubble: React.FC<BubbleProps> = ({ reminder, onDelete, onPositionCh
         isDragging.current = true;
         onDragStart();
       }}
+      onDrag={syncPosition}
       onDragEnd={handleDragEnd}
       layout
       initial={{ scale: 0, opacity: 0 }}
