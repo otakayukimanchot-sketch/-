@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu as MenuIcon, X, Sun, Moon, Trash2, HelpCircle, Share2, AlertTriangle } from 'lucide-react';
+import { Menu as MenuIcon, X, Sun, Moon, Trash2, HelpCircle, Share2, AlertTriangle, MousePointer2 } from 'lucide-react';
 import { Theme } from '../types';
 
 interface MenuProps {
   theme: Theme;
   onToggleTheme: () => void;
+  isFollowEnabled: boolean;
+  onToggleFollow: () => void;
   onClearAll: () => void;
   onShowTutorial: () => void;
   onShowShare: () => void;
   onShowNotes: () => void;
 }
 
-export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, onShowTutorial, onShowShare, onShowNotes }) => {
+export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, isFollowEnabled, onToggleFollow, onClearAll, onShowTutorial, onShowShare, onShowNotes }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const menuItems = [
@@ -30,6 +32,11 @@ export const Menu: React.FC<MenuProps> = ({ theme, onToggleTheme, onClearAll, on
       label: '紹介する',
       icon: <Share2 size={20} />,
       onClick: () => { onShowShare(); setIsOpen(false); }
+    },
+    {
+      label: isFollowEnabled ? '移動: ON' : '移動: OFF',
+      icon: <MousePointer2 size={20} className={isFollowEnabled ? 'text-[var(--text-active)]' : 'text-[var(--text-muted)]'} />,
+      onClick: () => { onToggleFollow(); }
     },
     {
       label: theme === Theme.LIGHT ? 'ダークモード' : 'ライトモード',

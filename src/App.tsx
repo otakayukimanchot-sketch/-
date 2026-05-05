@@ -17,6 +17,7 @@ export default function App() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [isFollowEnabled, setIsFollowEnabled] = useState(true);
   const [scale, setScale] = useState(1);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const attractorRef = useRef<{ x: number, y: number } | null>(null);
@@ -24,8 +25,12 @@ export default function App() {
 
   // Input tracking for attractor
   useEffect(() => {
+    if (!isFollowEnabled) {
+      attractorRef.current = null;
+    }
+
     const updateAttractor = (clientX: number, clientY: number) => {
-      if (!containerRef.current) return;
+      if (!containerRef.current || !isFollowEnabled) return;
       const rect = containerRef.current.getBoundingClientRect();
       attractorRef.current = {
         x: (clientX - rect.left) / rect.width,
@@ -59,7 +64,7 @@ export default function App() {
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, []);
+  }, [isFollowEnabled]);
 
   // Load data
   useEffect(() => {
@@ -68,9 +73,10 @@ export default function App() {
 
     if (saved) {
       try {
-        const { reminders: savedReminders, theme: savedTheme } = JSON.parse(saved);
+        const { reminders: savedReminders, theme: savedTheme, isFollowEnabled: savedFollow } = JSON.parse(saved);
         setReminders(savedReminders);
         setTheme(savedTheme || Theme.LIGHT);
+        if (savedFollow !== undefined) setIsFollowEnabled(savedFollow);
       } catch (e) {
         console.error('Failed to load storage', e);
       }
@@ -84,9 +90,9 @@ export default function App() {
 
   // Save data & theme application
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ reminders, theme }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ reminders, theme, isFollowEnabled }));
     document.body.className = `theme-${theme}`;
-  }, [reminders, theme]);
+  }, [reminders, theme, isFollowEnabled]);
 
   // Scaling logic & Collision Resolution (Force-directed layout inspired)
   useEffect(() => {
@@ -209,7 +215,7 @@ export default function App() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('resize', solveCollisions);
     };
-  }, [reminders, draggingId]);
+  }, [reminders, draggingId, isFollowEnabled]);
 
 
   const addReminder = (text: string, importance: number) => {
@@ -301,6 +307,8 @@ export default function App() {
       <Menu 
         theme={theme} 
         onToggleTheme={toggleTheme} 
+        isFollowEnabled={isFollowEnabled}
+        onToggleFollow={() => setIsFollowEnabled(!isFollowEnabled)}
         onClearAll={clearAll} 
         onShowTutorial={() => setShowTutorial(true)}
         onShowShare={() => setShowShare(true)}
