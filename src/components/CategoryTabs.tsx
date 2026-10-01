@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { CheckSquare, ShoppingBag } from 'lucide-react';
 import { Category, CATEGORY_INFO } from '../types';
 
 interface CategoryTabsProps {
@@ -20,66 +19,50 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
     {
       key: 'todo' as Category,
       title: CATEGORY_INFO.todo.title,
-      icon: CheckSquare,
       count: todoCount,
     },
     {
       key: 'shopping' as Category,
       title: CATEGORY_INFO.shopping.title,
-      icon: ShoppingBag,
       count: shoppingCount,
     },
   ];
 
   return (
-    <div className="w-full">
-      <div 
-        role="tablist"
-        aria-label="カテゴリー選択"
-        className="grid grid-cols-2 p-1.5 rounded-2xl bg-[var(--canvas-line-subtle)] border border-[var(--canvas-line)] shadow-inner"
-      >
-        {tabs.map((tab) => {
-          const isSelected = activeCategory === tab.key;
-          const Icon = tab.icon;
+    <nav 
+      aria-label="カテゴリー切替"
+      className="w-full border-b border-[var(--line-border)] flex items-center gap-8 text-sm"
+    >
+      {tabs.map((tab) => {
+        const isSelected = activeCategory === tab.key;
 
-          return (
-            <button
-              key={tab.key}
-              role="tab"
-              aria-selected={isSelected}
-              type="button"
-              onClick={() => onSelectCategory(tab.key)}
-              className={`relative flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl text-sm font-bold transition-all cursor-pointer select-none ${
-                isSelected
-                  ? 'bg-[var(--canvas-surface)] text-[var(--ink-primary)] shadow-sm'
-                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--canvas-surface)]/50'
-              }`}
-            >
-              <Icon size={18} strokeWidth={isSelected ? 2.5 : 2} />
-              <span>{tab.title}</span>
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => onSelectCategory(tab.key)}
+            className={`relative pb-3 pt-2 font-medium tracking-tight transition-colors flex items-center gap-2 cursor-pointer select-none ${
+              isSelected
+                ? 'text-[var(--text-primary)] font-semibold'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            <span className="text-base sm:text-lg">{tab.title}</span>
 
-              {/* Counter badge */}
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full font-mono font-medium tabular-nums transition-colors ${
-                  isSelected
-                    ? 'bg-[var(--ink-primary)] text-[var(--canvas-surface)]'
-                    : 'bg-[var(--canvas-line)] text-[var(--ink-muted)]'
-                }`}
-              >
-                {tab.count}
-              </span>
+            <span className="text-xs font-mono tabular-nums text-[var(--text-tertiary)]">
+              {tab.count}
+            </span>
 
-              {isSelected && (
-                <motion.div
-                  layoutId="activeCategoryIndicator"
-                  className="absolute bottom-0 left-4 right-4 h-0.5 bg-[var(--ink-primary)] rounded-full"
-                  transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+            {isSelected && (
+              <motion.div
+                layoutId="activeTabUnderline"
+                className="absolute bottom-0 left-0 right-0 h-[2px] bg-[var(--text-primary)]"
+                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+              />
+            )}
+          </button>
+        );
+      })}
+    </nav>
   );
 };

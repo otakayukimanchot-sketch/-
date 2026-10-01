@@ -12,7 +12,6 @@ import { NotesModal } from './components/NotesModal';
 const STORAGE_KEY = 'fukimemo_data';
 const APP_PUBLIC_URL = 'https://fukimemo.vercel.app/';
 
-// Default sample items for a welcoming first-launch experience
 const INITIAL_SAMPLE_ITEMS: TodoItem[] = [
   {
     id: 'sample-1',
@@ -114,14 +113,12 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
 
-        // Migrate theme
         if (parsed.themeMode) {
           setThemeMode(parsed.themeMode);
         } else if (parsed.theme) {
           setThemeMode(parsed.theme === 'dark' ? 'dark' : 'light');
         }
 
-        // Migrate items: handle both old `reminders` array and new `items` array
         const rawItems = parsed.items || parsed.reminders || [];
         if (Array.isArray(rawItems) && rawItems.length > 0) {
           const migrated: TodoItem[] = rawItems.map((raw: LegacyReminder, index: number) => {
@@ -205,7 +202,6 @@ export default function App() {
 
   const handleSaveTodo = useCallback((data: { title: string; category: Category; priority: Priority; id?: string }) => {
     if (data.id) {
-      // Editing existing item
       setItems((prev) =>
         prev.map((item) =>
           item.id === data.id
@@ -219,7 +215,6 @@ export default function App() {
         )
       );
     } else {
-      // Creating new item
       const newItem: TodoItem = {
         id: crypto.randomUUID(),
         title: data.title,
@@ -247,7 +242,6 @@ export default function App() {
     setItems([]);
   }, []);
 
-  // Today's date in Japanese format
   const today = useMemo(() => {
     const d = new Date();
     const dateStr = d.toLocaleDateString('ja-JP', {
@@ -259,7 +253,6 @@ export default function App() {
     return { dateStr, dayStr };
   }, []);
 
-  // Active uncompleted count for each category
   const todoCount = useMemo(() => {
     return items.filter((i) => i.category === 'todo' && !i.completed).length;
   }, [items]);
@@ -269,34 +262,20 @@ export default function App() {
   }, [items]);
 
   return (
-    <div className="min-h-screen bg-[var(--canvas-bg)] text-[var(--ink-primary)] selection:bg-[var(--ink-primary)] selection:text-[var(--canvas-bg)] pb-24">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        {/* Top Header */}
-        <header className="flex items-center justify-between pb-4 border-b border-[var(--canvas-line)]">
-          {/* Brand Wordmark */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[var(--ink-primary)] text-[var(--canvas-bg)] flex items-center justify-center font-bold text-sm shadow-xs">
-              ふ
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--ink-primary)] leading-tight">
-                ふきメモ
-              </h1>
-              <span className="text-[10px] uppercase tracking-[0.25em] font-medium text-[var(--ink-muted)] block">
-                CANVAS NOTE TODO
-              </span>
-            </div>
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] selection:bg-[var(--text-primary)] selection:text-[var(--bg-primary)] pb-28">
+      {/* Top Header - Apple / Stripe Style Flat Header */}
+      <header className="w-full border-b border-[var(--line-border)] bg-[var(--bg-primary)]">
+        <div className="max-w-3xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+              ふきメモ
+            </h1>
           </div>
 
-          {/* Date & Menu Button */}
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <span className="text-xs font-mono font-medium text-[var(--ink-primary)]">
-                {today.dateStr}
-              </span>
-              <span className="text-[10px] text-[var(--ink-muted)] font-medium ml-1.5">
-                ({today.dayStr})
-              </span>
+          <div className="flex items-center gap-4">
+            <div className="text-right text-xs text-[var(--text-secondary)] font-mono hidden sm:block">
+              <span>{today.dateStr}</span>
+              <span className="ml-1 text-[var(--text-tertiary)]">({today.dayStr})</span>
             </div>
 
             <Menu
@@ -308,27 +287,28 @@ export default function App() {
               onShowNotes={() => setShowNotes(true)}
             />
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Category Switcher Tabs: Selecting switches the displayed list directly */}
-        <nav aria-label="カテゴリー切替">
-          <CategoryTabs
-            activeCategory={activeCategory}
-            onSelectCategory={(cat) => setActiveCategory(cat)}
-            todoCount={todoCount}
-            shoppingCount={shoppingCount}
-          />
-        </nav>
+      {/* Main Container - Full-width vertical reading flow */}
+      <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-6 space-y-6">
+        {/* Category Navigation - Flat underline tabs */}
+        <CategoryTabs
+          activeCategory={activeCategory}
+          onSelectCategory={(cat) => setActiveCategory(cat)}
+          todoCount={todoCount}
+          shoppingCount={shoppingCount}
+        />
 
-        {/* Category List Content: In-place smooth transition */}
-        <main>
+        {/* Content Section */}
+        <main className="w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeCategory}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.16, ease: 'easeOut' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
             >
               <TodoListView
                 category={activeCategory}
@@ -370,7 +350,7 @@ export default function App() {
         url={APP_PUBLIC_URL}
       />
 
-      {/* Notes / Cautions Modal */}
+      {/* Notes Modal */}
       <NotesModal
         isOpen={showNotes}
         onClose={() => setShowNotes(false)}

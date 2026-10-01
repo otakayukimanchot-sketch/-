@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckSquare, ShoppingBag, AlertCircle, ArrowDownAZ } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface TutorialProps {
   isOpen: boolean;
@@ -11,86 +11,78 @@ export const Tutorial: React.FC<TutorialProps> = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-black/35 backdrop-blur-[1px]"
           />
 
           <motion.div
-            initial={{ scale: 0.96, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.96, opacity: 0, y: 10 }}
-            className="relative w-full max-w-lg bg-[var(--canvas-surface)] border border-[var(--canvas-line)] p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col gap-6 max-h-[85vh] overflow-y-auto"
+            initial={{ y: '100%', opacity: 0.95 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            className="relative w-full sm:max-w-lg bg-[var(--bg-primary)] border-t sm:border border-[var(--line-border)] p-6 sm:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
           >
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="閉じる"
-              className="absolute top-4 right-4 p-2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--canvas-line-subtle)] rounded-full transition-colors"
-            >
-              <X size={20} />
-            </button>
-
-            {/* Header */}
-            <div>
-              <span className="text-[11px] font-mono tracking-widest uppercase text-[var(--ink-muted)]">
-                HOW TO USE
-              </span>
-              <h2 className="text-2xl font-bold tracking-tight text-[var(--ink-primary)] mt-1">
-                ふきメモの使い方
-              </h2>
-              <p className="text-xs text-[var(--ink-muted)] mt-1">
-                白いキャンバスノートに書き込むような、温かみのあるTodoアプリです。
-              </p>
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--line-border)]">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+                  使い方ガイド
+                </h2>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  シンプルで直感的なタスク管理
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="閉じる"
+                className="w-8 h-8 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            {/* Steps */}
-            <div className="space-y-4 text-xs sm:text-sm text-[var(--ink-primary)]">
-              {/* Step 1 */}
-              <div className="p-4 rounded-2xl bg-[var(--canvas-bg)] border border-[var(--canvas-line-subtle)] space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
-                  <span className="w-5 h-5 rounded-full bg-[var(--ink-primary)] text-[var(--canvas-bg)] text-[11px] flex items-center justify-center">1</span>
-                  <span>2つのカテゴリーに分けて管理</span>
-                </div>
-                <p className="text-[var(--ink-muted)] pl-7 leading-relaxed">
-                  メイン画面の「やること」（タスク・作業）と「買うもの」（買い物・消耗品）から選び、それぞれのノート一覧を開きます。
+            <div className="space-y-6 text-sm text-[var(--text-primary)] leading-relaxed">
+              <section className="space-y-1.5 pb-4 border-b border-[var(--line-subtle)]">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  01. カテゴリーの切り替え
+                </h3>
+                <p className="text-sm">
+                  画面上部の「やること」と「買うもの」のタブを切り替えることで、それぞれのタスク一覧をその場で即座に表示できます。
                 </p>
-              </div>
+              </section>
 
-              {/* Step 2 */}
-              <div className="p-4 rounded-2xl bg-[var(--canvas-bg)] border border-[var(--canvas-line-subtle)] space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
-                  <span className="w-5 h-5 rounded-full bg-[var(--ink-primary)] text-[var(--canvas-bg)] text-[11px] flex items-center justify-center">2</span>
-                  <span>3段階の重要度で自動並び替え</span>
-                </div>
-                <p className="text-[var(--ink-muted)] pl-7 leading-relaxed">
-                  追加時に「やばめ」「そこそこ」「後で」を選択すると、リスト上で優先度の高い順に自動整列されます。
+              <section className="space-y-1.5 pb-4 border-b border-[var(--line-subtle)]">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  02. 3段階の重要度順に自動整理
+                </h3>
+                <p className="text-sm">
+                  「やばめ」「そこそこ」「後で」の重要度を設定すると、リストの上から優先度順に自動で並び替わります。
                 </p>
-              </div>
+              </section>
 
-              {/* Step 3 */}
-              <div className="p-4 rounded-2xl bg-[var(--canvas-bg)] border border-[var(--canvas-line-subtle)] space-y-1.5">
-                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
-                  <span className="w-5 h-5 rounded-full bg-[var(--ink-primary)] text-[var(--canvas-bg)] text-[11px] flex items-center justify-center">3</span>
-                  <span>タップで完了チェック</span>
-                </div>
-                <p className="text-[var(--ink-muted)] pl-7 leading-relaxed">
-                  項目の左側にあるチェックボックスをタップすると完了になり、下部の「完了済み」リストへ移動します。再度タップで未完了に戻せます。
+              <section className="space-y-1.5">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  03. タップで完了
+                </h3>
+                <p className="text-sm">
+                  各項目のチェックをタップすると取り消し線が引かれ、下部の「完了済み」へ移動します。再度タップでいつでも未完了に戻せます。
                 </p>
-              </div>
+              </section>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-3.5 bg-[var(--ink-primary)] text-[var(--canvas-bg)] rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
-            >
-              ノートを使い始める
-            </button>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-3 bg-[var(--text-primary)] text-[var(--bg-primary)] border border-[var(--text-primary)] text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                閉じる
+              </button>
+            </div>
           </motion.div>
         </div>
       )}

@@ -2,37 +2,31 @@
 
 @layer base {
   :root {
-    --canvas-bg: #faf7f2;
-    --canvas-surface: #ffffff;
-    --canvas-line: #ebe5dc;
-    --canvas-line-subtle: #f2eee8;
-    --canvas-margin-line: #e38686;
-    --ink-primary: #272422;
-    --ink-muted: #78736d;
-    --ink-faint: #aba59c;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9f9fb;
+    --bg-hover: #f3f3f6;
+    --line-border: #e6e6eb;
+    --line-subtle: #f0f0f4;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-tertiary: #86868b;
     --accent-urgent: #c2410c;
-    --accent-urgent-bg: #fff7ed;
-    --accent-urgent-border: #fdba74;
     --accent-medium: #4b5563;
     --accent-later: #9ca3af;
-    --paper-shadow: 0 2px 12px -2px rgba(45, 35, 25, 0.05), 0 1px 3px rgba(45, 35, 25, 0.04);
   }
 
   .theme-dark {
-    --canvas-bg: #181716;
-    --canvas-surface: #22201e;
-    --canvas-line: #2e2b28;
-    --canvas-line-subtle: #262421;
-    --canvas-margin-line: #6b3e3e;
-    --ink-primary: #f5f2eb;
-    --ink-muted: #a39e95;
-    --ink-faint: #67635c;
-    --accent-urgent: #fb923c;
-    --accent-urgent-bg: #2b1810;
-    --accent-urgent-border: #7c2d12;
+    --bg-primary: #0a0a0c;
+    --bg-secondary: #141417;
+    --bg-hover: #1c1c20;
+    --line-border: #242429;
+    --line-subtle: #19191d;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-tertiary: #636366;
+    --accent-urgent: #ea580c;
     --accent-medium: #9ca3af;
     --accent-later: #6b7280;
-    --paper-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
   }
 
   * {
@@ -40,40 +34,12 @@
   }
 
   body {
-    background-color: var(--canvas-bg);
-    color: var(--ink-primary);
-    font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-    transition: background-color 0.25s ease, color 0.25s ease;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Zen Kaku Gothic New", "Helvetica Neue", "Segoe UI", sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
     overflow-x: hidden;
-    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-}
-
-/* Subtle ruled notebook lines pattern helper */
-.notebook-ruled-bg {
-  background-size: 100% 32px;
-  background-image: linear-gradient(to bottom, transparent 31px, var(--canvas-line-subtle) 32px);
-}
-
-/* Soft paper texture feel */
-.canvas-card {
-  background-color: var(--canvas-surface);
-  border: 1px solid var(--canvas-line);
-  box-shadow: var(--paper-shadow);
-}
-
-/* Strikethrough ink animation */
-.strike-line {
-  position: relative;
-}
-.strike-line::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 100%;
-  height: 1.5px;
-  background-color: var(--ink-faint);
-  transform: translateY(-50%);
-  pointer-events: none;
 }

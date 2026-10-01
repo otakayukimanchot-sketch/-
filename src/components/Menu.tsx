@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu as MenuIcon, X, Sun, Moon, Monitor, Trash2, HelpCircle, Share2, AlertTriangle, BookOpen } from 'lucide-react';
+import { Menu as MenuIcon, X, Sun, Moon, Monitor, Trash2, HelpCircle, Share2, AlertTriangle } from 'lucide-react';
 import { ThemeMode } from '../types';
 
 interface MenuProps {
@@ -27,11 +27,11 @@ export const Menu: React.FC<MenuProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        aria-label="メニューを開く"
-        className="w-10 h-10 rounded-xl bg-[var(--canvas-surface)] border border-[var(--canvas-line)] flex items-center justify-center text-[var(--ink-primary)] hover:border-[var(--ink-muted)] transition-colors cursor-pointer shadow-xs"
+        aria-label="メニュー"
+        className="w-9 h-9 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
         id="menu-btn"
       >
-        <MenuIcon size={20} />
+        <MenuIcon size={20} strokeWidth={1.75} />
       </button>
 
       <AnimatePresence>
@@ -42,89 +42,88 @@ export const Menu: React.FC<MenuProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+              className="absolute inset-0 bg-black/30 backdrop-blur-[1px]"
             />
 
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 240 }}
-              className="relative w-80 max-w-[85vw] h-full bg-[var(--canvas-surface)] border-l border-[var(--canvas-line)] p-6 shadow-2xl flex flex-col justify-between overflow-y-auto"
+              transition={{ type: 'spring', damping: 30, stiffness: 280 }}
+              className="relative w-80 max-w-[85vw] h-full bg-[var(--bg-primary)] border-l border-[var(--line-border)] p-6 flex flex-col justify-between overflow-y-auto"
             >
-              <div>
+              <div className="space-y-6">
                 {/* Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-[var(--canvas-line)]">
-                  <div className="flex items-center gap-2">
-                    <BookOpen size={20} className="text-[var(--ink-primary)]" />
-                    <span className="font-bold text-base text-[var(--ink-primary)]">設定・メニュー</span>
-                  </div>
+                <div className="flex items-center justify-between pb-4 border-b border-[var(--line-border)]">
+                  <span className="font-semibold text-sm tracking-tight text-[var(--text-primary)]">
+                    メニュー
+                  </span>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
                     aria-label="閉じる"
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--canvas-line-subtle)] transition-colors"
+                    className="w-8 h-8 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                   >
-                    <X size={20} />
+                    <X size={18} />
                   </button>
                 </div>
 
-                {/* Theme Selector */}
-                <div className="mt-6 space-y-2">
-                  <label className="text-xs font-bold text-[var(--ink-muted)] tracking-wider">
-                    表示テーマ
+                {/* Theme Selector: Flat segmented buttons */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-[var(--text-secondary)] tracking-wider uppercase">
+                    外観モード
                   </label>
-                  <div className="grid grid-cols-3 gap-1.5 p-1 bg-[var(--canvas-bg)] rounded-xl border border-[var(--canvas-line)]">
+                  <div className="grid grid-cols-3 border border-[var(--line-border)] divide-x divide-[var(--line-border)]">
                     <button
                       type="button"
                       onClick={() => onChangeThemeMode('light')}
-                      className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex flex-col items-center justify-center py-2.5 text-xs font-medium transition-colors cursor-pointer ${
                         themeMode === 'light'
-                          ? 'bg-[var(--canvas-surface)] text-[var(--ink-primary)] shadow-xs'
-                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                          ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] font-semibold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <Sun size={16} className="mb-1" />
+                      <Sun size={15} className="mb-1" />
                       <span>ライト</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onChangeThemeMode('dark')}
-                      className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex flex-col items-center justify-center py-2.5 text-xs font-medium transition-colors cursor-pointer ${
                         themeMode === 'dark'
-                          ? 'bg-[var(--canvas-surface)] text-[var(--ink-primary)] shadow-xs'
-                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                          ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] font-semibold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <Moon size={16} className="mb-1" />
+                      <Moon size={15} className="mb-1" />
                       <span>ダーク</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => onChangeThemeMode('system')}
-                      className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg text-xs font-medium transition-all ${
+                      className={`flex flex-col items-center justify-center py-2.5 text-xs font-medium transition-colors cursor-pointer ${
                         themeMode === 'system'
-                          ? 'bg-[var(--canvas-surface)] text-[var(--ink-primary)] shadow-xs'
-                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                          ? 'bg-[var(--text-primary)] text-[var(--bg-primary)] font-semibold'
+                          : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                       }`}
                     >
-                      <Monitor size={16} className="mb-1" />
-                      <span>端末連動</span>
+                      <Monitor size={15} className="mb-1" />
+                      <span>自動</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Navigation links */}
-                <div className="mt-6 space-y-1">
+                <div className="space-y-1 pt-2">
                   <button
                     type="button"
                     onClick={() => {
                       onShowTutorial();
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--canvas-line-subtle)] text-[var(--ink-primary)] text-sm font-medium transition-colors text-left"
+                    className="w-full flex items-center gap-3 py-3 border-b border-[var(--line-subtle)] text-[var(--text-primary)] text-sm font-medium hover:text-[var(--text-secondary)] transition-colors text-left cursor-pointer"
                   >
-                    <HelpCircle size={18} className="text-[var(--ink-muted)]" />
+                    <HelpCircle size={16} className="text-[var(--text-secondary)]" />
                     <span>使い方ガイド</span>
                   </button>
 
@@ -134,9 +133,9 @@ export const Menu: React.FC<MenuProps> = ({
                       onShowNotes();
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--canvas-line-subtle)] text-[var(--ink-primary)] text-sm font-medium transition-colors text-left"
+                    className="w-full flex items-center gap-3 py-3 border-b border-[var(--line-subtle)] text-[var(--text-primary)] text-sm font-medium hover:text-[var(--text-secondary)] transition-colors text-left cursor-pointer"
                   >
-                    <AlertTriangle size={18} className="text-[var(--ink-muted)]" />
+                    <AlertTriangle size={16} className="text-[var(--text-secondary)]" />
                     <span>ご利用上の注意点</span>
                   </button>
 
@@ -146,32 +145,32 @@ export const Menu: React.FC<MenuProps> = ({
                       onShowShare();
                       setIsOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--canvas-line-subtle)] text-[var(--ink-primary)] text-sm font-medium transition-colors text-left"
+                    className="w-full flex items-center gap-3 py-3 border-b border-[var(--line-subtle)] text-[var(--text-primary)] text-sm font-medium hover:text-[var(--text-secondary)] transition-colors text-left cursor-pointer"
                   >
-                    <Share2 size={18} className="text-[var(--ink-muted)]" />
-                    <span>アプリを共有する</span>
+                    <Share2 size={16} className="text-[var(--text-secondary)]" />
+                    <span>共有する</span>
                   </button>
                 </div>
               </div>
 
-              {/* Bottom danger action & footer */}
-              <div className="pt-6 border-t border-[var(--canvas-line)] space-y-3">
+              {/* Bottom reset action */}
+              <div className="pt-6 border-t border-[var(--line-border)] space-y-3">
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm('すべてのTodo項目を削除してもよろしいですか？この操作は取り消せません。')) {
+                    if (confirm('すべての項目を削除してもよろしいですか？この操作は取り消せません。')) {
                       onClearAll();
                       setIsOpen(false);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 text-xs font-bold transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-red-500 hover:opacity-75 transition-opacity cursor-pointer"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={14} />
                   <span>すべてのデータを削除</span>
                 </button>
 
-                <p className="text-[11px] text-center text-[var(--ink-faint)]">
-                  ふきメモ · キャンバスノートTodo
+                <p className="text-[11px] text-center text-[var(--text-tertiary)]">
+                  ふきメモ
                 </p>
               </div>
             </motion.div>

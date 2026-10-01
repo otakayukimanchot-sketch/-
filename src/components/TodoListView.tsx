@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, CheckCircle2, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Category, Priority, TodoItem, CATEGORY_INFO } from '../types';
 import { TodoItemRow } from './TodoItemRow';
 
@@ -38,9 +38,8 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
     const active = categoryItems.filter((item) => !item.completed);
     const completed = categoryItems.filter((item) => item.completed);
 
-    // Sort active items:
-    // 1. Priority: urgent (やばめ) -> medium (そこそこ) -> later (後で)
-    // 2. Tie breaker: createdAt ascending (added order maintained)
+    // 1. Priority: urgent -> medium -> later
+    // 2. Added order: createdAt ascending
     const priorityWeight: Record<Priority, number> = {
       urgent: 1,
       medium: 2,
@@ -53,7 +52,6 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
       return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
     });
 
-    // Completed items: most recently completed first
     completed.sort((a, b) => {
       const timeA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
       const timeB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
@@ -64,35 +62,30 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
   }, [categoryItems]);
 
   return (
-    <div className="w-full space-y-6">
-      {/* Category Header Description & Count Bar */}
-      <div className="flex items-baseline justify-between flex-wrap gap-2 pt-2 pb-3 border-b border-[var(--canvas-line)]">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--ink-primary)]">
+    <div className="w-full space-y-8">
+      {/* Category Section Header: Flat editorial typography */}
+      <section className="pt-2 pb-4 border-b border-[var(--line-border)] flex items-end justify-between flex-wrap gap-4">
+        <div className="space-y-1">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
             {info.title}
           </h2>
-          <p className="text-xs text-[var(--ink-muted)] mt-0.5">
+          <p className="text-sm text-[var(--text-secondary)]">
             {info.subtitle}
           </p>
         </div>
 
-        <div className="text-right">
-          <span className="text-xs text-[var(--ink-muted)]">
-            未完了 <strong className="text-[var(--ink-primary)] font-bold tabular-nums">{activeItems.length}</strong> 件
-            {completedItems.length > 0 && (
-              <>
-                <span className="mx-1.5 opacity-40">·</span>
-                完了 <span className="tabular-nums font-medium">{completedItems.length}</span> 件
-              </>
-            )}
-          </span>
+        <div className="text-right text-xs text-[var(--text-secondary)] font-mono">
+          <span>未完了 {activeItems.length} 件</span>
+          {completedItems.length > 0 && (
+            <span> · 完了 {completedItems.length} 件</span>
+          )}
         </div>
-      </div>
+      </section>
 
-      {/* Active Items List: Clean Notebook Canvas feel with generous spacing */}
-      <section className="space-y-1">
+      {/* Active Items: Direct flat full-width list */}
+      <section className="w-full">
         {activeItems.length > 0 ? (
-          <div className="canvas-card rounded-2xl p-2 sm:p-3 divide-y divide-[var(--canvas-line-subtle)]">
+          <div className="w-full divide-y divide-[var(--line-subtle)] border-t border-[var(--line-subtle)]">
             <AnimatePresence initial={false}>
               {activeItems.map((item) => (
                 <TodoItemRow
@@ -107,39 +100,32 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
             </AnimatePresence>
           </div>
         ) : (
-          <div className="canvas-card rounded-2xl p-8 sm:p-12 text-center text-[var(--ink-muted)] space-y-3">
-            <div className="w-12 h-12 rounded-full bg-[var(--canvas-line-subtle)] flex items-center justify-center mx-auto text-[var(--ink-faint)]">
-              <CheckCircle2 size={24} />
-            </div>
-            <p className="text-base font-medium text-[var(--ink-primary)]">
-              項目はありません
-            </p>
-            <p className="text-xs max-w-xs mx-auto leading-relaxed">
-              右下の「＋」ボタンを押して、新しい項目をノートに書き込みましょう。
+          <div className="py-16 text-center space-y-4">
+            <p className="text-base font-normal text-[var(--text-secondary)]">
+              現在、登録されている項目はありません
             </p>
             <button
               type="button"
               onClick={() => onOpenAdd(category)}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--ink-primary)] text-[var(--canvas-bg)] text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+              className="text-sm font-medium text-[var(--text-primary)] underline underline-offset-4 hover:opacity-75 transition-opacity cursor-pointer"
             >
-              <Plus size={14} strokeWidth={2.5} />
-              <span>新しい項目を追加</span>
+              ＋ 新しい項目を追加する
             </button>
           </div>
         )}
       </section>
 
-      {/* Completed Items Section: Separated by clear subtle divider line */}
+      {/* Completed Items Section: Flat typography divider */}
       {completedItems.length > 0 && (
-        <section className="pt-4 border-t border-[var(--canvas-line)]">
-          <div className="flex items-center justify-between py-2 mb-2">
+        <section className="w-full pt-8 mt-12 border-t border-[var(--line-border)] space-y-4">
+          <div className="flex items-center justify-between py-1">
             <button
               type="button"
               onClick={() => setShowCompleted(!showCompleted)}
-              className="flex items-center gap-2 text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors cursor-pointer"
+              className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <span>完了済み ({completedItems.length})</span>
-              {showCompleted ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              {showCompleted ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
 
             <button
@@ -149,9 +135,9 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
                   onClearCompleted(category);
                 }
               }}
-              className="text-[11px] text-[var(--ink-faint)] hover:text-red-500 transition-colors flex items-center gap-1 cursor-pointer"
+              className="text-xs text-[var(--text-tertiary)] hover:text-red-500 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <Trash2 size={12} />
+              <Trash2 size={13} />
               <span>完了を消去</span>
             </button>
           </div>
@@ -162,8 +148,8 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="canvas-card rounded-2xl p-2 sm:p-3 divide-y divide-[var(--canvas-line-subtle)] opacity-85"
+                transition={{ duration: 0.15 }}
+                className="w-full divide-y divide-[var(--line-subtle)] border-t border-[var(--line-subtle)] opacity-70"
               >
                 {completedItems.map((item) => (
                   <TodoItemRow
@@ -181,17 +167,16 @@ export const TodoListView: React.FC<TodoListViewProps> = ({
         </section>
       )}
 
-      {/* Floating Action Button (FAB) for adding new items */}
-      <motion.button
+      {/* Floating Action Button: Clean flat circular button without drop shadow */}
+      <button
         type="button"
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.94 }}
         onClick={() => onOpenAdd(category)}
         aria-label="新しい項目を追加"
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[var(--ink-primary)] text-[var(--canvas-bg)] flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow z-30 cursor-pointer"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-[var(--text-primary)] text-[var(--bg-primary)] border border-[var(--line-border)] flex items-center justify-center hover:opacity-90 active:scale-95 transition-all z-40 cursor-pointer"
+        style={{ borderRadius: '9999px' }}
       >
-        <Plus size={28} strokeWidth={2.5} />
-      </motion.button>
+        <Plus size={24} strokeWidth={2} />
+      </button>
     </div>
   );
 };

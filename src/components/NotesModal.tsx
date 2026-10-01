@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertTriangle, ShieldCheck, Database, Smartphone } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface NotesModalProps {
   isOpen: boolean;
@@ -11,81 +11,78 @@ export const NotesModal: React.FC<NotesModalProps> = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-black/35 backdrop-blur-[1px]"
           />
 
           <motion.div
-            initial={{ scale: 0.96, opacity: 0, y: 10 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.96, opacity: 0, y: 10 }}
-            className="relative w-full max-w-md bg-[var(--canvas-surface)] border border-[var(--canvas-line)] p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col gap-6 max-h-[85vh] overflow-y-auto"
+            initial={{ y: '100%', opacity: 0.95 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            className="relative w-full sm:max-w-md bg-[var(--bg-primary)] border-t sm:border border-[var(--line-border)] p-6 sm:p-8 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
           >
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="閉じる"
-              className="absolute top-4 right-4 p-2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--canvas-line-subtle)] rounded-full transition-colors"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <AlertTriangle size={20} />
-              </div>
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--line-border)]">
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-[var(--ink-primary)]">
+                <h2 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
                   ご利用上の注意点
                 </h2>
-                <p className="text-xs text-[var(--ink-muted)]">データの保存とお取り扱いについて</p>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  データの保存とお取り扱い
+                </p>
               </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="閉じる"
+                className="w-8 h-8 flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="space-y-4 text-xs sm:text-sm text-[var(--ink-primary)] leading-relaxed">
-              <section className="p-3.5 rounded-xl bg-[var(--canvas-bg)] border border-[var(--canvas-line-subtle)] space-y-1">
-                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
-                  <Database size={15} />
-                  <span>データの保存場所</span>
-                </div>
-                <p className="text-[var(--ink-muted)] pl-6 text-xs">
-                  すべてのタスクとメモは、お使いの端末ブラウザ内（LocalStorage）にのみ安全に保存されます。外部サーバーには送信されません。
+            <div className="space-y-6 text-sm text-[var(--text-primary)] leading-relaxed">
+              <section className="space-y-1 pb-4 border-b border-[var(--line-subtle)]">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  ローカル保存
+                </h3>
+                <p className="text-sm">
+                  すべてのタスクはお使いの端末のブラウザ内（LocalStorage）にのみ安全に保存されます。
                 </p>
               </section>
 
-              <section className="p-3.5 rounded-xl bg-[var(--canvas-bg)] border border-[var(--canvas-line-subtle)] space-y-1">
-                <div className="flex items-center gap-2 font-bold text-[var(--ink-primary)]">
-                  <Smartphone size={15} />
-                  <span>端末・ブラウザ間での共有</span>
-                </div>
-                <p className="text-[var(--ink-muted)] pl-6 text-xs">
-                  アカウント登録不要で手軽に使える仕組みのため、PCとスマートフォンなど異なる端末間での自動同期機能はありません。
+              <section className="space-y-1 pb-4 border-b border-[var(--line-subtle)]">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  デバイス間同期
+                </h3>
+                <p className="text-sm">
+                  アカウント登録不要のシンプル設計のため、異なる端末間での同期は行われません。
                 </p>
               </section>
 
-              <section className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 space-y-1">
-                <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                  <ShieldCheck size={15} />
-                  <span>キャッシュ消去時の注意</span>
-                </div>
-                <p className="text-amber-900/80 dark:text-amber-200/80 pl-6 text-xs">
-                  ブラウザの履歴やCookie・サイトデータをすべて消去すると、保存されていたタスクも一緒に削除される場合がありますのでご注意ください。
+              <section className="space-y-1">
+                <h3 className="font-semibold text-xs tracking-wider uppercase text-[var(--text-secondary)]">
+                  ブラウザデータの消去
+                </h3>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  ブラウザの履歴やCookie・サイトデータを消去すると、保存されているデータも一緒に削除されますのでご注意ください。
                 </p>
               </section>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full py-3.5 bg-[var(--ink-primary)] text-[var(--canvas-bg)] rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
-            >
-              理解しました
-            </button>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-3 bg-[var(--text-primary)] text-[var(--bg-primary)] border border-[var(--text-primary)] text-sm font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                理解しました
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
