@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Share2, Copy } from 'lucide-react';
+import { X, Share2, Copy, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface ShareModalProps {
@@ -10,12 +10,14 @@ interface ShareModalProps {
 }
 
 export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) => {
+  const [copied, setCopied] = useState(false);
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'ふきメモ',
-          text: '直感的に使える、視覚的メモ「ふきメモ」',
+          title: 'ふきメモ - キャンバスノートTodo',
+          text: '白いキャンバスノートに書き込むような、温かみのあるシンプルなTodoアプリ「ふきメモ」',
           url: url,
         });
       } catch (err) {
@@ -28,68 +30,79 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, url }) 
 
   const handleCopy = () => {
     navigator.clipboard.writeText(url);
-    alert('リンクをコピーしました！');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
           />
-          
+
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            className="relative w-full max-w-sm bg-[var(--bg-primary)] border-2 border-[var(--text-active)] p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6"
+            initial={{ scale: 0.96, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.96, opacity: 0, y: 10 }}
+            className="relative w-full max-w-sm bg-[var(--canvas-surface)] border border-[var(--canvas-line)] p-6 sm:p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-5"
           >
-            <button 
+            <button
+              type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              aria-label="閉じる"
+              className="absolute top-4 right-4 p-2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--canvas-line-subtle)] rounded-full transition-colors"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
 
             <div className="text-center space-y-1">
-              <h2 className="text-2xl font-black uppercase tracking-tighter">紹介する</h2>
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">Share Fukimemo</p>
+              <h2 className="text-xl font-bold tracking-tight text-[var(--ink-primary)]">
+                アプリを紹介する
+              </h2>
+              <p className="text-xs text-[var(--ink-muted)]">
+                家族や友人と共有して使えます
+              </p>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border-2 border-[var(--text-active)]">
-              <QRCodeSVG 
-                value={url} 
-                size={200}
-                level="H"
+            <div className="p-4 bg-white rounded-2xl border border-[var(--canvas-line)] shadow-xs">
+              <QRCodeSVG
+                value={url}
+                size={180}
+                level="M"
                 includeMargin={false}
               />
             </div>
 
-            <div className="w-full space-y-4">
-              <div className="flex items-center gap-2 p-3 bg-[var(--text-muted)]/10 rounded-xl overflow-hidden">
-                <span className="flex-1 truncate text-xs font-mono opacity-60 italic">{url}</span>
-                <button onClick={handleCopy} className="p-2 hover:bg-[var(--text-active)] hover:text-[var(--bg-primary)] rounded-lg transition-colors">
-                  <Copy size={16} />
+            <div className="w-full space-y-3">
+              <div className="flex items-center gap-2 p-2.5 bg-[var(--canvas-bg)] border border-[var(--canvas-line)] rounded-xl overflow-hidden">
+                <span className="flex-1 truncate text-xs font-mono text-[var(--ink-muted)] select-all px-1">
+                  {url}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="px-2.5 py-1.5 rounded-lg bg-[var(--canvas-surface)] border border-[var(--canvas-line)] text-xs font-medium text-[var(--ink-primary)] hover:bg-[var(--canvas-line-subtle)] transition-colors flex items-center gap-1.5 shrink-0"
+                >
+                  {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  <span>{copied ? 'コピー済' : 'コピー'}</span>
                 </button>
               </div>
 
               <button
+                type="button"
                 onClick={handleShare}
-                className="w-full py-4 bg-[var(--text-active)] text-[var(--bg-primary)] rounded-full font-bold flex items-center justify-center gap-3 hover:opacity-90 transition-opacity uppercase tracking-widest"
+                className="w-full py-3.5 bg-[var(--ink-primary)] text-[var(--canvas-bg)] rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
-                <Share2 size={20} />
-                <span>Share Link</span>
+                <Share2 size={16} />
+                <span>リンクを共有する</span>
               </button>
             </div>
-
-            <p className="text-[10px] text-[var(--text-muted)] text-center italic">
-              二次元コードをスキャンして共有
-            </p>
           </motion.div>
         </div>
       )}

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { AnimatePresence } from 'motion/react';
-import { Theme, Reminder } from './types';
-import { Bubble } from './components/Bubble';
-import { AddForm } from './components/AddForm';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Category, Priority, TodoItem, ThemeMode, LegacyReminder } from './types';
+import { CategoryTabs } from './components/CategoryTabs';
+import { TodoListView } from './components/TodoListView';
+import { AddTodoModal } from './components/AddTodoModal';
 import { Menu } from './components/Menu';
 import { Tutorial } from './components/Tutorial';
 import { ShareModal } from './components/ShareModal';
@@ -11,75 +12,148 @@ import { NotesModal } from './components/NotesModal';
 const STORAGE_KEY = 'fukimemo_data';
 const APP_PUBLIC_URL = 'https://fukimemo.vercel.app/';
 
+// Default sample items for a welcoming first-launch experience
+const INITIAL_SAMPLE_ITEMS: TodoItem[] = [
+  {
+    id: 'sample-1',
+    title: '資料を提出する',
+    category: 'todo',
+    priority: 'urgent',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+  {
+    id: 'sample-2',
+    title: 'メールを返信する',
+    category: 'todo',
+    priority: 'medium',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+  },
+  {
+    id: 'sample-3',
+    title: '部屋を掃除する',
+    category: 'todo',
+    priority: 'later',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+  },
+  {
+    id: 'sample-4',
+    title: '牛乳・たまご',
+    category: 'shopping',
+    priority: 'urgent',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+  },
+  {
+    id: 'sample-5',
+    title: 'ティッシュペーパー',
+    category: 'shopping',
+    priority: 'medium',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+  },
+  {
+    id: 'sample-6',
+    title: 'シャンプーの詰め替え',
+    category: 'shopping',
+    priority: 'later',
+    completed: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+];
+
 export default function App() {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [theme, setTheme] = useState<Theme>(Theme.LIGHT);
+  const [items, setItems] = useState<TodoItem[]>([]);
+  const [activeCategory, setActiveCategory] = useState<Category>('todo');
+  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
+  const [isDarkEffective, setIsDarkEffective] = useState(false);
+
+  // Modals state
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [addCategory, setAddCategory] = useState<Category>('todo');
+  const [editingItem, setEditingItem] = useState<TodoItem | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
-  const [isFollowEnabled, setIsFollowEnabled] = useState(true);
-  const [scale, setScale] = useState(1);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const attractorRef = useRef<{ x: number, y: number } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Input tracking for attractor
+  // System Dark Mode Detection
   useEffect(() => {
-    if (!isFollowEnabled) {
-      attractorRef.current = null;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const updateTheme = () => {
+      if (themeMode === 'system') {
+        setIsDarkEffective(mediaQuery.matches);
+      } else {
+        setIsDarkEffective(themeMode === 'dark');
+      }
+    };
+
+    updateTheme();
+    mediaQuery.addEventListener('change', updateTheme);
+    return () => mediaQuery.removeEventListener('change', updateTheme);
+  }, [themeMode]);
+
+  // Apply theme class to document
+  useEffect(() => {
+    if (isDarkEffective) {
+      document.documentElement.classList.add('theme-dark');
+      document.body.classList.add('theme-dark');
+    } else {
+      document.documentElement.classList.remove('theme-dark');
+      document.body.classList.remove('theme-dark');
     }
+  }, [isDarkEffective]);
 
-    const updateAttractor = (clientX: number, clientY: number) => {
-      if (!containerRef.current || !isFollowEnabled) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      attractorRef.current = {
-        x: (clientX - rect.left) / rect.width,
-        y: (clientY - rect.top) / rect.height
-      };
-    };
-
-    const handlePointerMove = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' || (e.pointerType === 'touch' && e.buttons > 0)) {
-        updateAttractor(e.clientX, e.clientY);
-      }
-    };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      updateAttractor(e.clientX, e.clientY);
-    };
-
-    const handlePointerUp = (e: PointerEvent) => {
-      setDraggingId(null);
-      if (e.pointerType === 'touch') {
-        attractorRef.current = null;
-      }
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerdown', handlePointerDown);
-    window.addEventListener('pointerup', handlePointerUp);
-
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [isFollowEnabled]);
-
-  // Load data
+  // Load and migrate data
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('fukirima_data');
     const hasSeenTutorial = localStorage.getItem('fukimemo_tutorial_seen');
 
     if (saved) {
       try {
-        const { reminders: savedReminders, theme: savedTheme, isFollowEnabled: savedFollow } = JSON.parse(saved);
-        setReminders(savedReminders);
-        setTheme(savedTheme || Theme.LIGHT);
-        if (savedFollow !== undefined) setIsFollowEnabled(savedFollow);
+        const parsed = JSON.parse(saved);
+
+        // Migrate theme
+        if (parsed.themeMode) {
+          setThemeMode(parsed.themeMode);
+        } else if (parsed.theme) {
+          setThemeMode(parsed.theme === 'dark' ? 'dark' : 'light');
+        }
+
+        // Migrate items: handle both old `reminders` array and new `items` array
+        const rawItems = parsed.items || parsed.reminders || [];
+        if (Array.isArray(rawItems) && rawItems.length > 0) {
+          const migrated: TodoItem[] = rawItems.map((raw: LegacyReminder, index: number) => {
+            let priority: Priority = 'medium';
+            if (raw.priority) {
+              priority = raw.priority;
+            } else if (typeof raw.importance === 'number') {
+              if (raw.importance >= 70) priority = 'urgent';
+              else if (raw.importance >= 35) priority = 'medium';
+              else priority = 'later';
+            }
+
+            return {
+              id: raw.id || `migrated-${index}-${Date.now()}`,
+              title: raw.title || raw.text || '無題のメモ',
+              category: raw.category || 'todo',
+              priority,
+              completed: !!raw.completed,
+              createdAt: raw.createdAt || new Date().toISOString(),
+              completedAt: raw.completedAt || null,
+            };
+          });
+          setItems(migrated);
+        } else {
+          setItems(INITIAL_SAMPLE_ITEMS);
+        }
       } catch (e) {
-        console.error('Failed to load storage', e);
+        console.error('Failed to parse storage:', e);
+        setItems(INITIAL_SAMPLE_ITEMS);
       }
+    } else {
+      setItems(INITIAL_SAMPLE_ITEMS);
     }
 
     if (!hasSeenTutorial) {
@@ -88,244 +162,215 @@ export default function App() {
     }
   }, []);
 
-  // Save data & theme application
+  // Save data to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ reminders, theme, isFollowEnabled }));
-    document.body.className = `theme-${theme}`;
-  }, [reminders, theme, isFollowEnabled]);
+    if (items.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, themeMode }));
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: [], themeMode }));
+    }
+  }, [items, themeMode]);
 
-  // Scaling logic & Collision Resolution (Force-directed layout inspired)
-  useEffect(() => {
-    let rafId: number;
-    let lastTime = Date.now();
-
-    const solveCollisions = () => {
-      if (!containerRef.current || reminders.length === 0) {
-        setScale(1);
-        return;
-      }
-
-      const attractor = attractorRef.current;
-      const now = Date.now();
-      const deltaTime = (now - lastTime) / 1000;
-      lastTime = now;
-
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      // 1. Calculate ideal scale based on density
-      const totalRawArea = reminders.reduce((acc, r) => {
-        const h = (120 + r.importance * 1.6);
-        const w = h * 1.3;
-        return acc + (w * h);
-      }, 0);
-
-      const targetDensity = 0.38; 
-      const screenArea = viewportWidth * viewportHeight;
-      const areaBasedScale = Math.sqrt((screenArea * targetDensity) / totalRawArea);
-      const countFactor = reminders.length > 5 ? Math.pow(0.95, reminders.length - 5) : 1;
-      const finalScale = Math.max(0.12, Math.min(0.85, areaBasedScale * countFactor));
-      
-      setScale(finalScale);
-
-      // 2. Force-directed spread
-      let newReminders = JSON.parse(JSON.stringify(reminders));
-      const iterations = 8;
-      const repulsionStrength = 0.05;
-      const centerPull = 0.002;
-
-      for (let i = 0; i < iterations; i++) {
-        for (let a = 0; a < newReminders.length; a++) {
-          const ra = newReminders[a];
-          
-          // PINNING LOGIC: If this bubble is being dragged, lock it to the cursor
-          if (ra.id === draggingId && attractor) {
-            newReminders[a].x = attractor.x;
-            newReminders[a].y = attractor.y;
-            continue; // Skip physics for the pinned item
-          }
-
-          // Repulsion from other bubbles
-          for (let b = a + 1; b < newReminders.length; b++) {
-            const rb = newReminders[b];
-            
-            const dx = (ra.x - rb.x);
-            const dy = (ra.y - rb.y) * (viewportHeight / viewportWidth);
-            const distSq = dx * dx + dy * dy;
-            const dist = Math.sqrt(distSq) || 0.01;
-            
-            const ha = (120 + ra.importance * 1.6) * finalScale;
-            const hb = (120 + rb.importance * 1.6) * finalScale;
-            const idealDist = (Math.max(ha, hb) * 1.3) / viewportWidth;
-
-            if (dist < idealDist) {
-              const push = (idealDist - dist) * repulsionStrength;
-              const moveX = (dx / dist) * push;
-              const moveY = (dy / dist) * push * (viewportWidth / viewportHeight);
-
-              if (ra.id !== draggingId) {
-                newReminders[a].x += moveX;
-                newReminders[a].y += moveY;
-              }
-              if (rb.id !== draggingId) {
-                newReminders[b].x -= moveX;
-                newReminders[b].y -= moveY;
-              }
-            }
-          }
-          
-          // Pull to attractor (pointer/touch) or visual center area
-          if (ra.id !== draggingId) {
-            const targetX = attractor ? attractor.x : 0.5;
-            const targetY = attractor ? attractor.y : 0.55;
-            
-            const pullStrength = attractor ? 0.04 : centerPull;
-            
-            newReminders[a].x += (targetX - newReminders[a].x) * pullStrength;
-            newReminders[a].y += (targetY - newReminders[a].y) * pullStrength;
-          }
-
-          // Strict Edge constraints with padding
-          const padX = 0.1;
-          const padYTop = 0.15;
-          const padYBottom = 0.12;
-          
-          if (newReminders[a].id !== draggingId) {
-            newReminders[a].x = Math.max(padX, Math.min(1 - padX, newReminders[a].x));
-            newReminders[a].y = Math.max(padYTop, Math.min(1 - padYBottom, newReminders[a].y));
-          }
+  // Handlers
+  const handleToggleComplete = useCallback((id: string) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextCompleted = !item.completed;
+          return {
+            ...item,
+            completed: nextCompleted,
+            completedAt: nextCompleted ? new Date().toISOString() : null,
+          };
         }
-      }
+        return item;
+      })
+    );
+  }, []);
 
-      // Update state if changed
-      const changed = newReminders.some((r: Reminder, j: number) => {
-        return Math.abs(r.x - reminders[j].x) > 0.0001 || Math.abs(r.y - reminders[j].y) > 0.0001;
-      });
+  const handleDelete = useCallback((id: string) => {
+    setItems((prev) => prev.filter((item) => item.id !== id));
+  }, []);
 
-      if (changed) {
-        setReminders(newReminders);
-      }
-      
-      rafId = requestAnimationFrame(solveCollisions);
-    };
+  const handleEdit = useCallback((item: TodoItem) => {
+    setEditingItem(item);
+    setIsAddOpen(true);
+  }, []);
 
-    rafId = requestAnimationFrame(solveCollisions);
-    window.addEventListener('resize', solveCollisions);
-    return () => {
-      cancelAnimationFrame(rafId);
-      window.removeEventListener('resize', solveCollisions);
-    };
-  }, [reminders, draggingId, isFollowEnabled]);
+  const handleOpenAdd = useCallback((category?: Category) => {
+    setEditingItem(null);
+    setAddCategory(category || activeCategory);
+    setIsAddOpen(true);
+  }, [activeCategory]);
 
+  const handleSaveTodo = useCallback((data: { title: string; category: Category; priority: Priority; id?: string }) => {
+    if (data.id) {
+      // Editing existing item
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === data.id
+            ? {
+                ...item,
+                title: data.title,
+                category: data.category,
+                priority: data.priority,
+              }
+            : item
+        )
+      );
+    } else {
+      // Creating new item
+      const newItem: TodoItem = {
+        id: crypto.randomUUID(),
+        title: data.title,
+        category: data.category,
+        priority: data.priority,
+        completed: false,
+        createdAt: new Date().toISOString(),
+      };
+      setItems((prev) => [...prev, newItem]);
+    }
+    setEditingItem(null);
+  }, []);
 
-  const addReminder = (text: string, importance: number) => {
-    // Safe margins: 15% from left/right, 20% from top (avoid title), 15% from bottom
-    const x = 0.1 + Math.random() * 0.8;
-    const y = 0.1 + Math.random() * 0.8;
+  const handleClearCompleted = useCallback((category: Category) => {
+    setItems((prev) => prev.filter((item) => !(item.category === category && item.completed)));
+  }, []);
 
-    const newReminder: Reminder = {
-      id: crypto.randomUUID(),
-      text,
-      importance,
-      createdAt: new Date().toISOString(),
-      x,
-      y,
-    };
-    setReminders((prev) => [newReminder, ...prev]);
-  };
+  const handleMoveCategory = useCallback((id: string, newCategory: Category) => {
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, category: newCategory } : item))
+    );
+  }, []);
 
-  const deleteReminder = (id: string) => {
-    setReminders((prev) => prev.filter((r) => r.id !== id));
-  };
+  const handleClearAll = useCallback(() => {
+    setItems([]);
+  }, []);
 
-  const clearAll = () => {
-    setReminders([]);
-  };
+  // Today's date in Japanese format
+  const today = useMemo(() => {
+    const d = new Date();
+    const dateStr = d.toLocaleDateString('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).replace(/\//g, '.');
+    const dayStr = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    return { dateStr, dayStr };
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === Theme.LIGHT ? Theme.DARK : Theme.LIGHT));
-  };
+  // Active uncompleted count for each category
+  const todoCount = useMemo(() => {
+    return items.filter((i) => i.category === 'todo' && !i.completed).length;
+  }, [items]);
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
-  const dayStr = ['日', '月', '火', '水', '木', '金', '土'][now.getDay()];
+  const shoppingCount = useMemo(() => {
+    return items.filter((i) => i.category === 'shopping' && !i.completed).length;
+  }, [items]);
 
   return (
-    <div 
-      className="fixed inset-0 w-full h-full overflow-hidden flex items-center justify-center select-none"
-      style={{ backgroundColor: 'var(--bg-primary)' }}
-    >
-      {/* App Logo/Title with Integrated Frosted Glass */}
-      <div className="fixed top-0 left-0 pt-6 pl-6 pr-12 pb-10 z-50 rounded-br-[64px] backdrop-blur-[40px] pointer-events-none">
-        <h1 className="text-2xl font-black tracking-tighter uppercase leading-none text-[var(--text-active)]">
-          ふきメモ
-        </h1>
-        <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-[var(--text-muted)] mt-1.5 block">
-          吹き出しメモ
-        </span>
-      </div>
-
-      {/* Date & Weekday Display */}
-      <div className="fixed top-6 right-20 z-50 flex items-center gap-3 pr-4 pointer-events-none">
-        <div className="text-right">
-          <div className="text-sm font-black tracking-widest text-[var(--text-active)] lining-nums leading-none">
-            {dateStr}
+    <div className="min-h-screen bg-[var(--canvas-bg)] text-[var(--ink-primary)] selection:bg-[var(--ink-primary)] selection:text-[var(--canvas-bg)] pb-24">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+        {/* Top Header */}
+        <header className="flex items-center justify-between pb-4 border-b border-[var(--canvas-line)]">
+          {/* Brand Wordmark */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[var(--ink-primary)] text-[var(--canvas-bg)] flex items-center justify-center font-bold text-sm shadow-xs">
+              ふ
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--ink-primary)] leading-tight">
+                ふきメモ
+              </h1>
+              <span className="text-[10px] uppercase tracking-[0.25em] font-medium text-[var(--ink-muted)] block">
+                CANVAS NOTE TODO
+              </span>
+            </div>
           </div>
-          <div className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] mt-1">
-            {dayStr}曜日
-          </div>
-        </div>
-        <div className="w-[1px] h-6 bg-[var(--text-active)]/10" />
-      </div>
 
-      <div 
-        ref={containerRef}
-        className="relative w-full h-full"
-      >
-        <AnimatePresence mode="popLayout">
-          {reminders.map((reminder) => (
-            <Bubble
-              key={reminder.id}
-              reminder={reminder}
-              onDelete={deleteReminder}
-              onDragStart={() => setDraggingId(reminder.id)}
-              scale={scale}
+          {/* Date & Menu Button */}
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <span className="text-xs font-mono font-medium text-[var(--ink-primary)]">
+                {today.dateStr}
+              </span>
+              <span className="text-[10px] text-[var(--ink-muted)] font-medium ml-1.5">
+                ({today.dayStr})
+              </span>
+            </div>
+
+            <Menu
+              themeMode={themeMode}
+              onChangeThemeMode={setThemeMode}
+              onClearAll={handleClearAll}
+              onShowTutorial={() => setShowTutorial(true)}
+              onShowShare={() => setShowShare(true)}
+              onShowNotes={() => setShowNotes(true)}
             />
-          ))}
-        </AnimatePresence>
-
-        {reminders.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--text-muted)] text-center space-y-4 animate-pulse pointer-events-none">
-            <p className="text-xl font-light tracking-widest uppercase">No Bubbles</p>
-            <p className="text-xs">右下の＋ボタンから追加してください</p>
           </div>
-        )}
+        </header>
+
+        {/* Category Switcher Tabs: Selecting switches the displayed list directly */}
+        <nav aria-label="カテゴリー切替">
+          <CategoryTabs
+            activeCategory={activeCategory}
+            onSelectCategory={(cat) => setActiveCategory(cat)}
+            todoCount={todoCount}
+            shoppingCount={shoppingCount}
+          />
+        </nav>
+
+        {/* Category List Content: In-place smooth transition */}
+        <main>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeCategory}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
+            >
+              <TodoListView
+                category={activeCategory}
+                items={items}
+                onToggleComplete={handleToggleComplete}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onOpenAdd={handleOpenAdd}
+                onClearCompleted={handleClearCompleted}
+                onMoveCategory={handleMoveCategory}
+              />
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
 
-      <AddForm onAdd={addReminder} />
-      
-      <Menu 
-        theme={theme} 
-        onToggleTheme={toggleTheme} 
-        isFollowEnabled={isFollowEnabled}
-        onToggleFollow={() => setIsFollowEnabled(!isFollowEnabled)}
-        onClearAll={clearAll} 
-        onShowTutorial={() => setShowTutorial(true)}
-        onShowShare={() => setShowShare(true)}
-        onShowNotes={() => setShowNotes(true)}
+      {/* Add / Edit Todo Modal */}
+      <AddTodoModal
+        isOpen={isAddOpen}
+        onClose={() => {
+          setIsAddOpen(false);
+          setEditingItem(null);
+        }}
+        onSave={handleSaveTodo}
+        initialCategory={addCategory}
+        editingItem={editingItem}
       />
 
-      <Tutorial 
-        isOpen={showTutorial} 
-        onClose={() => setShowTutorial(false)} 
+      {/* Tutorial Modal */}
+      <Tutorial
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
       />
 
+      {/* Share Modal */}
       <ShareModal
         isOpen={showShare}
         onClose={() => setShowShare(false)}
         url={APP_PUBLIC_URL}
       />
 
+      {/* Notes / Cautions Modal */}
       <NotesModal
         isOpen={showNotes}
         onClose={() => setShowNotes(false)}
